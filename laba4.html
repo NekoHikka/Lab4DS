@@ -78,7 +78,6 @@
       через BigInt)
     </p>
 
-    <!-- ===== HEX → ENDIAN ===== -->
     <h2>HEX → Little-Endian / Big-Endian</h2>
 
     <label>HEX рядок:</label>
@@ -109,7 +108,6 @@
 
     <hr />
 
-    <!-- ===== LITTLE ENDIAN → HEX ===== -->
     <h2>Little-Endian → HEX</h2>
 
     <label>Ціле число (Little-Endian значення):</label>
@@ -131,7 +129,6 @@
 
     <hr />
 
-    <!-- ===== BIG ENDIAN → HEX ===== -->
     <h2>Big-Endian → HEX</h2>
 
     <label>Ціле число (Big-Endian значення):</label>
@@ -156,12 +153,6 @@
     </div>
 
     <script>
-      // ─── Library functions ───────────────────────────────────────────────────
-
-      /**
-       * Normalize a hex string: strip spaces, lowercase, ensure even length.
-       * Returns null if invalid characters present.
-       */
       function normalizeHex(hex) {
         hex = hex.replace(/\s+/g, "").toLowerCase();
         if (!/^[0-9a-f]+$/.test(hex)) return null;
@@ -169,9 +160,6 @@
         return hex;
       }
 
-      /**
-       * Parse hex string into an array of byte values (each 0–255).
-       */
       function hexToBytes(hex) {
         const bytes = [];
         for (let i = 0; i < hex.length; i += 2) {
@@ -180,10 +168,6 @@
         return bytes;
       }
 
-      /**
-       * Convert hex string → Little-Endian unsigned integer (BigInt).
-       * Little-endian: first byte is the LEAST significant.
-       */
       function hexToLittleEndian(hex) {
         hex = normalizeHex(hex);
         if (!hex) throw new Error("Невалідний HEX рядок");
@@ -195,10 +179,6 @@
         return result;
       }
 
-      /**
-       * Convert hex string → Big-Endian unsigned integer (BigInt).
-       * Big-endian: first byte is the MOST significant.
-       */
       function hexToBigEndian(hex) {
         hex = normalizeHex(hex);
         if (!hex) throw new Error("Невалідний HEX рядок");
@@ -210,11 +190,6 @@
         return result;
       }
 
-      /**
-       * Convert Little-Endian unsigned integer → hex string.
-       * @param {BigInt} value - the integer value
-       * @param {number} numBytes - target byte length (pads with zeros)
-       */
       function littleEndianToHex(value, numBytes) {
         value = BigInt(value);
         const bytes = [];
@@ -227,11 +202,6 @@
         return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
       }
 
-      /**
-       * Convert Big-Endian unsigned integer → hex string.
-       * @param {BigInt} value - the integer value
-       * @param {number} numBytes - target byte length (pads with zeros on left)
-       */
       function bigEndianToHex(value, numBytes) {
         value = BigInt(value);
         const bytes = [];
@@ -243,8 +213,6 @@
           throw new Error("Значення не вміщується у вказану кількість байтів");
         return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
       }
-
-      // ─── UI handlers ─────────────────────────────────────────────────────────
 
       function hexToEndians() {
         const raw = document.getElementById("hexInput").value.trim();
