@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>HEX ↔ Endian Converter</title>
+    <style>
+      body {
+        font-family: monospace;
+        max-width: 760px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background: #fff;
+        color: #000;
+      }
+      h1 {
+        font-size: 1.4em;
+        margin-bottom: 4px;
+      }
+      h2 {
+        font-size: 1.05em;
+        margin-top: 28px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 4px;
+      }
+      label {
+        display: block;
+        margin-top: 10px;
+        font-size: 13px;
+        color: #444;
+      }
+      input,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        font-family: monospace;
+        font-size: 13px;
+        padding: 7px;
+        border: 1px solid #999;
+      }
+      textarea {
+        resize: vertical;
+      }
+      button {
+        margin-top: 8px;
+        padding: 7px 18px;
+        font-family: monospace;
+        font-size: 13px;
+        cursor: pointer;
+        background: #f0f0f0;
+        border: 1px solid #999;
+      }
+      button:hover {
+        background: #e0e0e0;
+      }
+      .result-box {
+        margin-top: 12px;
+        border: 1px solid #bbb;
+        background: #fafafa;
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+      .result-row {
+        margin: 4px 0;
+      }
+      .result-label {
+        color: #555;
+      }
+      .result-value {
+        font-weight: bold;
+        color: #c00;
+        word-break: break-all;
+      }
+      .error {
+        color: red;
+        margin-top: 8px;
+        font-size: 13px;
+      }
+      .examples {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #555;
+        border-left: 3px solid #ddd;
+        padding-left: 10px;
+      }
+      .examples b {
+        color: #333;
+      }
+      .examples code {
+        background: #f4f4f4;
+        padding: 1px 4px;
+      }
+      .ex-btn {
+        font-size: 11px;
+        padding: 2px 8px;
+        margin: 2px 4px 2px 0;
+        cursor: pointer;
+        background: #f8f8f8;
+        border: 1px solid #ccc;
+      }
+      .ex-btn:hover {
+        background: #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>HEX ↔ Endian Converter</h1>
+    <p style="font-size: 12px; color: #666; margin-top: 2px">
+      Конвертація між HEX рядком та Little/Big Endian числами. Підтримка великих
+      чисел (BigInt).
+    </p>
+
+    <h2>HEX → Little-Endian &amp; Big-Endian</h2>
+
+    <div class="examples">
+      <b>Спробуй приклад:</b><br />
+      <button
+        class="ex-btn"
+        onclick="
+          fillHex(
+            'ff00000000000000000000000000000000000000000000000000000000000000',
+          )
+        "
+      >
+        Vector 1 (32 bytes)
+      </button>
+      <button
+        class="ex-btn"
+        onclick="
+          fillHex(
+            'aaaa000000000000000000000000000000000000000000000000000000000000',
+          )
+        "
+      >
+        Vector 2 (32 bytes)
+      </button>
+      <button class="ex-btn" onclick="fillHex('FFFFFFFF')">
+        Vector 3 (4 bytes)
+      </button>
+      <button class="ex-btn" onclick="fillHex('0102')">
+        0x01 0x02 (2 bytes)
+      </button>
+    </div>
+
+    <label>HEX рядок:</label>
+    <textarea
+      id="hexInput"
+      rows="3"
+      placeholder="Наприклад: ff00000000000000000000000000000000000000000000000000000000000000"
+    ></textarea>
+    <button onclick="hexToEndians()">Конвертувати →</button>
+    <div id="hexError" class="error"></div>
+    <div id="hexResult" class="result-box" style="display: none">
+      <div class="result-row">
+        <span class="result-label">Кількість байтів: </span
+        ><span class="result-value" id="numBytes"></span>
+      </div>
+      <div class="result-row" style="margin-top: 8px">
+        <span class="result-label">Little-Endian (перший байт = молодший):</span
+        ><br /><span class="result-value" id="leResult"></span>
+      </div>
+      <div class="result-row" style="margin-top: 8px">
+        <span class="result-label">Big-Endian (перший байт = старший):</span
+        ><br /><span class="result-value" id="beResult"></span>
+      </div>
+    </div>
+
+    <h2>Little-Endian → HEX</h2>
+
+    <div class="examples">
+      <b>Спробуй приклад:</b><br />
+      <button class="ex-btn" onclick="fillLE('255', '32')">
+        255, 32 bytes
+      </button>
+      <button class="ex-btn" onclick="fillLE('43690', '32')">
+        43690, 32 bytes
+      </button>
+      <button class="ex-btn" onclick="fillLE('4294967295', '4')">
+        4294967295, 4 bytes
+      </button>
+      <button class="ex-btn" onclick="fillLE('256', '4')">256, 4 bytes</button>
+    </div>
+
+    <label>Ціле число (Little-Endian значення):</label>
+    <input id="leInput" type="text" placeholder="Наприклад: 255" />
+    <label>Кількість байтів у результаті:</label>
+    <input id="leBytes" type="number" min="1" max="512" value="32" />
+    <button onclick="leToHex()">Конвертувати →</button>
+    <div id="leError" class="error"></div>
+    <div id="leResultBox" class="result-box" style="display: none">
+      <div class="result-row">
+        <span class="result-label">HEX (little-endian порядок байтів):</span
+        ><br /><span class="result-value" id="leHexOut"></span>
+      </div>
+    </div>
+
+    <h2>Big-Endian → HEX</h2>
+
+    <div class="examples">
+      <b>Спробуй приклад:</b><br />
+      <button
+        class="ex-btn"
+        onclick="
+          fillBE(
+            '115339776388732929035197660848497720713218148788040405586178452820382218977280',
+            '32',
+          )
+        "
+      >
+        Vector 1 BE→HEX
+      </button>
+      <button class="ex-btn" onclick="fillBE('4294967295', '4')">
+        4294967295, 4 bytes
+      </button>
+      <button class="ex-btn" onclick="fillBE('255', '4')">255, 4 bytes</button>
+    </div>
+
+    <label>Ціле число (Big-Endian значення):</label>
+    <input id="beInput" type="text" placeholder="Наприклад: 4294967295" />
+    <label>Кількість байтів у результаті:</label>
+    <input id="beBytes" type="number" min="1" max="512" value="32" />
+    <button onclick="beToHex()">Конвертувати →</button>
+    <div id="beError" class="error"></div>
+    <div id="beResultDiv" class="result-box" style="display: none">
+      <div class="result-row">
+        <span class="result-label">HEX (big-endian порядок байтів):</span
+        ><br /><span class="result-value" id="beHexOut"></span>
+      </div>
+    </div>
+
+    <script>
+      function normalizeHex(hex) {
+        hex = hex.replace(/\s+/g, "").toLowerCase();
+        if (!/^[0-9a-f]+$/.test(hex)) return null;
+        if (hex.length % 2 !== 0) hex = "0" + hex;
+        return hex;
+      }
+      function hexToBytes(hex) {
+        const bytes = [];
+        for (let i = 0; i < hex.length; i += 2)
+          bytes.push(parseInt(hex.slice(i, i + 2), 16));
+        return bytes;
+      }
+      function hexToLittleEndian(hex) {
+        hex = normalizeHex(hex);
+        if (!hex) throw new Error("Невалідний HEX рядок");
+        const bytes = hexToBytes(hex);
+        let result = 0n;
+        for (let i = 0; i < bytes.length; i++)
+          result += BigInt(bytes[i]) * 256n ** BigInt(i);
+        return result;
+      }
+      function hexToBigEndian(hex) {
+        hex = normalizeHex(hex);
+        if (!hex) throw new Error("Невалідний HEX рядок");
+        const bytes = hexToBytes(hex);
+        let result = 0n;
+        for (let i = 0; i < bytes.length; i++)
+          result = result * 256n + BigInt(bytes[i]);
+        return result;
+      }
+      function littleEndianToHex(value, numBytes) {
+        value = BigInt(value);
+        if (value < 0n) throw new Error("Значення має бути невід'ємним");
+        const bytes = [];
+        for (let i = 0; i < numBytes; i++) {
+          bytes.push(Number(value & 0xffn));
+          value >>= 8n;
+        }
+        if (value !== 0n)
+          throw new Error("Значення не вміщується у " + numBytes + " байт(ів)");
+        return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+      function bigEndianToHex(value, numBytes) {
+        value = BigInt(value);
+        if (value < 0n) throw new Error("Значення має бути невід'ємним");
+        const bytes = [];
+        for (let i = 0; i < numBytes; i++) {
+          bytes.unshift(Number(value & 0xffn));
+          value >>= 8n;
+        }
+        if (value !== 0n)
+          throw new Error("Значення не вміщується у " + numBytes + " байт(ів)");
+        return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      function fillHex(val) {
+        document.getElementById("hexInput").value = val;
+        hexToEndians();
+      }
+      function fillLE(val, bytes) {
+        document.getElementById("leInput").value = val;
+        document.getElementById("leBytes").value = bytes;
+        leToHex();
+      }
+      function fillBE(val, bytes) {
+        document.getElementById("beInput").value = val;
+        document.getElementById("beBytes").value = bytes;
+        beToHex();
+      }
+
+      function hexToEndians() {
+        const errEl = document.getElementById("hexError");
+        const resEl = document.getElementById("hexResult");
+        errEl.textContent = "";
+        resEl.style.display = "none";
+        try {
+          const raw = document.getElementById("hexInput").value.trim();
+          if (!raw) throw new Error("Введіть HEX рядок");
+          const hex = normalizeHex(raw);
+          if (!hex) throw new Error("HEX рядок містить невалідні символи");
+          document.getElementById("numBytes").textContent = hex.length / 2;
+          document.getElementById("leResult").textContent =
+            hexToLittleEndian(hex).toString();
+          document.getElementById("beResult").textContent =
+            hexToBigEndian(hex).toString();
+          resEl.style.display = "";
+        } catch (e) {
+          errEl.textContent = "Помилка: " + e.message;
+        }
+      }
+
+      function leToHex() {
+        const errEl = document.getElementById("leError");
+        const resEl = document.getElementById("leResultBox");
+        errEl.textContent = "";
+        resEl.style.display = "none";
+        try {
+          const raw = document.getElementById("leInput").value.trim();
+          const numBytes = parseInt(document.getElementById("leBytes").value);
+          if (!raw) throw new Error("Введіть число");
+          if (!/^\d+$/.test(raw)) throw new Error("Лише невід'ємні цілі числа");
+          if (isNaN(numBytes) || numBytes < 1)
+            throw new Error("Вкажіть коректну кількість байтів");
+          document.getElementById("leHexOut").textContent = littleEndianToHex(
+            BigInt(raw),
+            numBytes,
+          );
+          resEl.style.display = "";
+        } catch (e) {
+          errEl.textContent = "Помилка: " + e.message;
+        }
+      }
+
+      function beToHex() {
+        const errEl = document.getElementById("beError");
+        const resEl = document.getElementById("beResultDiv");
+        errEl.textContent = "";
+        resEl.style.display = "none";
+        try {
+          const raw = document.getElementById("beInput").value.trim();
+          const numBytes = parseInt(document.getElementById("beBytes").value);
+          if (!raw) throw new Error("Введіть число");
+          if (!/^\d+$/.test(raw)) throw new Error("Лише невід'ємні цілі числа");
+          if (isNaN(numBytes) || numBytes < 1)
+            throw new Error("Вкажіть коректну кількість байтів");
+          document.getElementById("beHexOut").textContent = bigEndianToHex(
+            BigInt(raw),
+            numBytes,
+          );
+          resEl.style.display = "";
+        } catch (e) {
+          errEl.textContent = "Помилка: " + e.message;
+        }
+      }
+    </script>
+  </body>
+</html>
